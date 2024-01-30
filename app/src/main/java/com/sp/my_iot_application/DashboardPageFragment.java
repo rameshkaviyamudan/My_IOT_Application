@@ -93,7 +93,9 @@ public class DashboardPageFragment extends Fragment {
     }
 
     private void readThingSpeakData(String apiUrl, int fieldNumber) {
-        ThingSpeakReadApiTask readApiTask = new ThingSpeakReadApiTask(requireActivity(), lastValueTextView, fieldNumber);
+        int adjustedFieldNumber = (fieldNumber == 3) ? 6 : fieldNumber;
+
+        ThingSpeakReadApiTask readApiTask = new ThingSpeakReadApiTask(requireActivity(), lastValueTextView, adjustedFieldNumber);
         readApiTask.execute(apiUrl);
     }
 }

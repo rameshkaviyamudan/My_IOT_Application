@@ -158,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
                             return true;
                         } else if (item.getItemId() == R.id.action_tips) {
                             // Handle Tips
+                            loadFragment(new TipsFragment());
                             return true;
                         } else if (item.getItemId() == R.id.action_dashboard) {
                             // Handle Monitoring
@@ -293,9 +294,10 @@ public class MainActivity extends AppCompatActivity {
         //readApiTask.execute(readApiUrl);
     }
     private void loadFragment(Fragment fragment) {
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container2, fragment)
-                .commit();
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragment_container2, fragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
     }
 
 }

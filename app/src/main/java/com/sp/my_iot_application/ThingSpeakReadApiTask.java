@@ -1,5 +1,7 @@
 package com.sp.my_iot_application;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.TextView;
@@ -18,7 +20,7 @@ import java.net.URL;
 public class ThingSpeakReadApiTask extends AsyncTask<String, Void, String> {
 
     private static final String TAG = "ThingSpeakReadApiTask";
-    private FragmentActivity activity; // Change the type to FragmentActivity
+    private FragmentActivity activity;
     private TextView fieldTextView;
     private int fieldNumber;
 
@@ -65,12 +67,41 @@ public class ThingSpeakReadApiTask extends AsyncTask<String, Void, String> {
         if (response != null) {
             // Update the TextView with the response
             int fieldValue = extractFieldValueFromResponse(response, fieldNumber);
-            fieldTextView.setText("Field " + fieldNumber + " Value: " + fieldValue);
+
+            String fieldName;
+            switch (fieldNumber) {
+                case 1:
+                    fieldName = "Temperature";
+                    saveSensorData("temperature", fieldValue);
+                    break;
+                case 2:
+                    fieldName = "Humidity";
+                    saveSensorData("humidity", fieldValue);
+                    break;
+                case 6:
+                    fieldName = "Environment Lighting";
+                    saveSensorData("ldr", fieldValue);
+                    break;
+                default:
+                    fieldName = "Field " + fieldNumber;
+                    break;
+            }
+
+            fieldTextView.setText("Your most recent " + fieldName + " is: " + fieldValue);
         } else {
             // Handle the case where the response is null or there's an error
             fieldTextView.setText("Error fetching data from ThingSpeak");
         }
+
     }
+
+    private void saveSensorData(String sensorType, float value) {
+        SharedPreferences preferences = activity.getSharedPreferences("SensorData", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putFloat(sensorType, value);
+        editor.apply();
+    }
+
 
     private int extractFieldValueFromResponse(String response, int fieldNumber) {
         try {

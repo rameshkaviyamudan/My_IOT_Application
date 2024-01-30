@@ -25,6 +25,7 @@
         <activity
             android:name=".DashboardActivity"
             android:label="Dashboard">
+
             <!-- Add any intent filters or other activity configuration if needed -->
         </activity>
 
