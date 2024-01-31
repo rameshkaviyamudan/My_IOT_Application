@@ -27,29 +27,39 @@ public class TipsFragment extends Fragment {
         return view;
     }
 
-
     private void generateTips() {
-        SharedPreferences preferences = getActivity().getSharedPreferences("SensorData", Context.MODE_PRIVATE);
-
-        // Retrieve stored sensor data
-        float temperature = preferences.getFloat("temperature", 0.0f);
-        float humidity = preferences.getFloat("humidity", 0.0f);
-        int ldr = preferences.getInt("ldr", 0);
+        // Use the modified method to retrieve sensor data
+        float temperature = getLastSensorValue("temperature");
+        float humidity = getLastSensorValue("humidity");
+        float ldr = getLastSensorValue("ldr");
+        float motion = getLastSensorValue("motion");
+        float fanStatus = getLastSensorValue("fanStatus");
+        float lampStatus = getLastSensorValue("lampStatus");
 
         // Implement your algorithm to generate tips based on sensor data
-        String tips = generateTipsAlgorithm(temperature, humidity, ldr);
+        String tips = generateTipsAlgorithm(temperature, humidity, ldr, motion, fanStatus, lampStatus);
 
         // Set the generated tips in the TextView
         tipsTextView.setText(tips);
     }
 
-    private String generateTipsAlgorithm(float temperature, float humidity, int ldr) {
+
+    // Updated method to retrieve the last value from SharedPreferences
+    private float getLastSensorValue(String sensorType) {
+        SharedPreferences preferences = requireActivity().getSharedPreferences("SensorData", Context.MODE_PRIVATE);
+        return preferences.getFloat(sensorType, 0.0f); // Change 0 to the default value you want
+    }
+
+
+    private String generateTipsAlgorithm(float temperature, float humidity, float ldr, float motion, float fanStatus, float lampStatus) {
         StringBuilder tipsBuilder = new StringBuilder();
 
         // Generate tips based on sensor data
         String temperatureTip = generateTemperatureTip(temperature);
         String humidityTip = generateHumidityTip(humidity);
         String ldrTip = generateLDRTip(ldr);
+        String motionTip = generateMotionTip(motion);
+        String fanLampStatusTip = generateFanLampStatusTip(fanStatus, lampStatus);
 
         // Append the tips to the StringBuilder
         tipsBuilder.append(temperatureTip);
@@ -57,10 +67,15 @@ public class TipsFragment extends Fragment {
         tipsBuilder.append(humidityTip);
         tipsBuilder.append("\n");
         tipsBuilder.append(ldrTip);
+        tipsBuilder.append("\n");
+        tipsBuilder.append(motionTip);
+        tipsBuilder.append("\n");
+        tipsBuilder.append(fanLampStatusTip);
 
         // Return the generated tips
         return tipsBuilder.toString();
     }
+
 
     private String generateTemperatureTip(float temperature) {
         // Implement logic to generate temperature tips
@@ -90,17 +105,42 @@ public class TipsFragment extends Fragment {
         return "Humidity Tip: " + tip;
     }
 
-    private String generateLDRTip(int ldr) {
+    private String generateLDRTip(float ldr) {
         // Implement logic to generate LDR tips
         // For example, you can have different tips for various light sensitivity levels
         String tip;
-        if (ldr < 500) {
+        if (ldr < 50) {
             tip = "Low light sensitivity. Consider turning on lights.";
-        } else if (ldr >= 500 && ldr < 1000) {
+        } else if (ldr >= 50 && ldr < 80) {
             tip = "Moderate light sensitivity. Enjoy the natural light.";
         } else {
             tip = "High light sensitivity. Be mindful of glare and direct sunlight.";
         }
         return "LDR Tip: " + tip;
+    }
+    private String generateMotionTip(float motion) {
+        // Implement logic to generate tips based on motion detection
+        String tip;
+        if (motion == 1) {
+            tip = "Motion detected. Ensure that the area is well-lit for better visibility.";
+        } else {
+            tip = "No motion detected. Save energy by turning off unnecessary lights and appliances.";
+        }
+        return "Motion Tip: " + tip;
+    }
+
+    private String generateFanLampStatusTip(float fanStatus, float lampStatus) {
+        // Implement logic to generate tips based on fan and lamp status
+        String tip;
+        if (fanStatus == 1 && lampStatus == 0) {
+            tip = "Fan is ON, but the lamp is OFF. Consider turning on the lamp for better illumination.";
+        } else if (fanStatus == 0 && lampStatus == 1) {
+            tip = "Lamp is ON, but the fan is OFF. If the room is warm, consider turning on the fan for ventilation.";
+        } else if (fanStatus == 1 && lampStatus == 1) {
+            tip = "Both Fan and Lamp are ON. Ensure you turn them off when not needed to save energy.";
+        } else {
+            tip = "Fan and Lamp are OFF. Save energy by keeping them off when not needed.";
+        }
+        return "Fan/Lamp Status Tip: " + tip;
     }
 }

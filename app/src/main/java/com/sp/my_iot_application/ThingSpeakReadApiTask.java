@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.TextView;
 
 import androidx.fragment.app.FragmentActivity;
 
@@ -16,22 +15,23 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+// Define an interface for the callback
 
-public class ThingSpeakReadApiTask extends AsyncTask<String, Void, String> {
+public class ThingSpeakReadApiTask extends AsyncTask<String, Void, Integer> {
 
     private static final String TAG = "ThingSpeakReadApiTask";
     private FragmentActivity activity;
-    private TextView fieldTextView;
+    private ThingSpeakReadCallback callback;
+
     private int fieldNumber;
 
-    public ThingSpeakReadApiTask(FragmentActivity activity, TextView fieldTextView, int fieldNumber) {
+    public ThingSpeakReadApiTask(FragmentActivity activity, int fieldNumber) {
         this.activity = activity;
-        this.fieldTextView = fieldTextView;
         this.fieldNumber = fieldNumber;
     }
 
     @Override
-    protected String doInBackground(String... params) {
+    protected Integer doInBackground(String... params) {
         try {
             // Construct the URL
             URL url = new URL(params[0]);
@@ -52,56 +52,23 @@ public class ThingSpeakReadApiTask extends AsyncTask<String, Void, String> {
             // Disconnect
             urlConnection.disconnect();
 
-            return response.toString();
+            return extractFieldValueFromResponse(response.toString(), fieldNumber);
         } catch (IOException e) {
             Log.e(TAG, "Error reading data from ThingSpeak: " + e.getMessage());
         }
 
-        return null;
+        return 0;
     }
 
     @Override
-    protected void onPostExecute(String response) {
-        super.onPostExecute(response);
-
-        if (response != null) {
-            // Update the TextView with the response
-            int fieldValue = extractFieldValueFromResponse(response, fieldNumber);
-
-            String fieldName;
-            switch (fieldNumber) {
-                case 1:
-                    fieldName = "Temperature";
-                    saveSensorData("temperature", fieldValue);
-                    break;
-                case 2:
-                    fieldName = "Humidity";
-                    saveSensorData("humidity", fieldValue);
-                    break;
-                case 6:
-                    fieldName = "Environment Lighting";
-                    saveSensorData("ldr", fieldValue);
-                    break;
-                default:
-                    fieldName = "Field " + fieldNumber;
-                    break;
-            }
-
-            fieldTextView.setText("Your most recent " + fieldName + " is: " + fieldValue);
-        } else {
-            // Handle the case where the response is null or there's an error
-            fieldTextView.setText("Error fetching data from ThingSpeak");
+    protected void onPostExecute(Integer fieldValue) {
+        super.onPostExecute(fieldValue);
+// Notify the callback with the result
+        if (callback != null) {
+            callback.onThingSpeakDataReceived(fieldNumber, fieldValue);
         }
-
+        // No UI-related code here
     }
-
-    private void saveSensorData(String sensorType, float value) {
-        SharedPreferences preferences = activity.getSharedPreferences("SensorData", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putFloat(sensorType, value);
-        editor.apply();
-    }
-
 
     private int extractFieldValueFromResponse(String response, int fieldNumber) {
         try {
@@ -109,9 +76,7 @@ public class ThingSpeakReadApiTask extends AsyncTask<String, Void, String> {
             JSONObject jsonResponse = new JSONObject(response);
 
             // Get the field value
-            int fieldValue = jsonResponse.getInt("field" + fieldNumber);
-
-            return fieldValue;
+            return jsonResponse.getInt("field" + fieldNumber);
         } catch (JSONException e) {
             Log.e(TAG, "Error parsing ThingSpeak response: " + e.getMessage());
         }

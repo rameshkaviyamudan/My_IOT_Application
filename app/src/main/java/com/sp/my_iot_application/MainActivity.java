@@ -8,8 +8,10 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.MenuItem;
@@ -35,17 +37,30 @@ import android.widget.TextView;
 import android.widget.Toast;
 // Use the appropriate import statements
 import pl.droidsonroids.gif.GifImageView;
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ThingSpeakReadCallback {
+    @Override
+    public void onThingSpeakDataReceived(int fieldNumber, int fieldValue) {
+        // Your implementation of handling the received data
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putFloat(getFieldKey(fieldNumber), fieldValue);
+        editor.apply();
 
+        // Display a Toast or perform any other UI-related operation
+        String message = String.format("Field %d value received: %d", fieldNumber, fieldValue);
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
     private LinearLayout pullDownMenu;
     private ImageView arrowIcon;
 
     //private TextView field4TextView;
 
+    private SharedPreferences sharedPreferences;
+    private static final String SHARED_PREF_NAME = "SensorData";
 
     private BottomNavigationView bottomNavigationView;
     public static final String CHANNEL_ID = "MyIOTChannel";
     private static final int NOTIFICATION_REQUEST_CODE = 1001;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +74,12 @@ public class MainActivity extends AppCompatActivity {
         GifImageView lampIcon = findViewById(R.id.lampIcon);
 
         //field4TextView = findViewById(R.id.field4TextView); // Initialize TextView
+        // Initialize SharedPreferences
+        sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
+// Call the ThingSpeak API to read data for fields 1 to 6
+        for (int i = 1; i <= 6; i++) {
+            readThingSpeakData(i);
+        }
 
 
 // Check if notification permission is granted
@@ -172,7 +193,6 @@ public class MainActivity extends AppCompatActivity {
                 });
 
         // Call the ThingSpeak API to read data from Field 4
-        readThingSpeakData();
         //loadFragment(new DashboardFragment());
 
 
@@ -280,18 +300,19 @@ public class MainActivity extends AppCompatActivity {
         String message = String.format("API call: Device %d, Status %d", fieldNumber, fieldValue);
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
-    private void readThingSpeakData() {
+
+    private void readThingSpeakData(int fieldNumber) {
         // Replace with your ThingSpeak Read API key
         // and channel ID
         String apiKey = "HYIS4JRXOUDEEVC1";
         String channelId = "2348974"; // Replace with your actual ThingSpeak channel ID
 
-        // Construct the URL for reading data from Field 4
-        String readApiUrl = String.format("https://api.thingspeak.com/channels/%s/fields/4/last.json?api_key=%s", channelId, apiKey);
+        // Construct the URL for reading data from the specified field
+        String readApiUrl = String.format("https://api.thingspeak.com/channels/%s/fields/%d/last.json?api_key=%s", channelId, fieldNumber, apiKey);
 
-        // Use AsyncTask or any other mechanism to perform network operations (similar to your ThingSpeakApiTask)
-        //ThingSpeakReadApiTask readApiTask = new ThingSpeakReadApiTask(this, field4TextView);
-        //readApiTask.execute(readApiUrl);
+        // Call ThingSpeakReadApiTask
+        ThingSpeakReadApiTask readApiTask = new ThingSpeakReadApiTask(this, fieldNumber);
+        readApiTask.execute(readApiUrl);
     }
     private void loadFragment(Fragment fragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -300,5 +321,11 @@ public class MainActivity extends AppCompatActivity {
         transaction.commit();
     }
 
+    // This method is called when ThingSpeakReadApiTask completes its execution
+
+    private String getFieldKey(int fieldNumber) {
+        // Generate a key for storing the field value in SharedPreferences
+        return "field_" + fieldNumber;
+    }
 }
 

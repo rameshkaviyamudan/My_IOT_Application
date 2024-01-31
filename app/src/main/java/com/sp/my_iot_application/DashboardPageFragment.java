@@ -1,5 +1,7 @@
 package com.sp.my_iot_application;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -48,7 +50,6 @@ public class DashboardPageFragment extends Fragment {
 
         return view;
     }
-
     private void loadWebView(String url, int fieldNumber) {
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
@@ -71,31 +72,45 @@ public class DashboardPageFragment extends Fragment {
 
         webView.loadUrl(url);
 
-        // Use a different URL for fetching the last data
-        String lastDataUrl;
+        // Use SharedPreferences to get the last value
+        String fieldName;
+        float lastValue = getLastSensorValue(fieldNumber);
 
         switch (fieldNumber) {
             case 1:
-                lastDataUrl = "https://api.thingspeak.com/channels/2348974/fields/1/last.json?api_key=HYIS4JRXOUDEEVC1";
+                fieldName = "Temperature";
                 break;
             case 2:
-                lastDataUrl = "https://api.thingspeak.com/channels/2348974/fields/2/last.json?api_key=HYIS4JRXOUDEEVC1";
+                fieldName = "Humidity";
                 break;
             case 3:
-                lastDataUrl = "https://api.thingspeak.com/channels/2348974/fields/6/last.json?api_key=HYIS4JRXOUDEEVC1";
+                fieldName = "Environment Lighting";
                 break;
             default:
-                // Handle other cases if needed
-                lastDataUrl = "";
+                fieldName = "Field " + fieldNumber;
+                break;
         }
 
-        readThingSpeakData(lastDataUrl, fieldNumber);
+        lastValueTextView.setText("Your most recent " + fieldName + " is: " + lastValue);
     }
 
-    private void readThingSpeakData(String apiUrl, int fieldNumber) {
+    // Method to retrieve the last value from SharedPreferences
+    private float getLastSensorValue(int fieldNumber) {
+        SharedPreferences preferences = requireActivity().getSharedPreferences("SensorData", Context.MODE_PRIVATE);
+
+        // Adjust the field number if it is 6
         int adjustedFieldNumber = (fieldNumber == 3) ? 6 : fieldNumber;
 
-        ThingSpeakReadApiTask readApiTask = new ThingSpeakReadApiTask(requireActivity(), lastValueTextView, adjustedFieldNumber);
-        readApiTask.execute(apiUrl);
+        switch (adjustedFieldNumber) {
+            case 1:
+                return preferences.getFloat("temperature", 0);
+            case 2:
+                return preferences.getFloat("humidity", 0);
+            case 6:
+                return preferences.getFloat("ldr", 0);
+            default:
+                return 0;
+        }
     }
+
 }
