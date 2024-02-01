@@ -2,24 +2,27 @@ package com.sp.my_iot_application;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
 public class TipsFragment extends Fragment {
-    private TextView tipsTextView;
+    private LinearLayout tipsContainer;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_tips, container, false);
         // Initialize the TextView
-        tipsTextView = view.findViewById(R.id.tipsTextView);
+        tipsContainer = view.findViewById(R.id.tipsContainer);
 
         // Call the method to generate and display tips
         generateTips();
@@ -28,27 +31,78 @@ public class TipsFragment extends Fragment {
     }
 
     private void generateTips() {
-        // Use the modified method to retrieve sensor data
-        float temperature = getLastSensorValue("temperature");
-        float humidity = getLastSensorValue("humidity");
-        float ldr = getLastSensorValue("ldr");
-        float motion = getLastSensorValue("motion");
-        float fanStatus = getLastSensorValue("fanStatus");
-        float lampStatus = getLastSensorValue("lampStatus");
+        float temperature = getLastSensorValue(1);
+        float humidity = getLastSensorValue(2);
+        float ldr = getLastSensorValue(6);
+        float motion = getLastSensorValue(3);
+        float fanStatus = getLastSensorValue(4);
+        float lampStatus = getLastSensorValue(5);
 
-        // Implement your algorithm to generate tips based on sensor data
-        String tips = generateTipsAlgorithm(temperature, humidity, ldr, motion, fanStatus, lampStatus);
+        addTipCard("Temperature Tip", generateTemperatureTip(temperature), Color.parseColor("#FFE0B2")); // Light Orange
+        addTipCard("Humidity Tip", generateHumidityTip(humidity), Color.parseColor("#C8E6C9")); // Light Green
+        addTipCard("LDR Tip", generateLDRTip(ldr), Color.parseColor("#D1C4E9")); // Light Purple
+        addTipCard("Motion Tip", generateMotionTip(motion), Color.parseColor("#FFE0B2")); // Light Orange
+        addTipCard("Fan/Lamp Status Tip", generateFanLampStatusTip(fanStatus, lampStatus), Color.parseColor("#C8E6C9")); // Light Green
 
-        // Set the generated tips in the TextView
-        tipsTextView.setText(tips);
     }
+    private void addTipCard(String title, String tip, int cardColor) {
+        // Create a new CardView
+        CardView cardView = new CardView(requireContext());
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.setMargins(0, 0, 0, 40); // Add margin for spacing between cards
+        cardView.setLayoutParams(layoutParams);
+        cardView.setCardBackgroundColor(cardColor); // Set the background color of the card
+        cardView.setCardElevation(4); // Customize the elevation as needed
+
+        // Create a new TextView for the tip content
+        TextView tipTextView = new TextView(requireContext());
+        tipTextView.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        tipTextView.setPadding(16, 16, 16, 16); // Add padding for better appearance
+        tipTextView.setText(title + "\n\n" + tip);
+
+        // Add the TextView to the CardView
+        cardView.addView(tipTextView);
+
+        // Add the CardView to the tipsContainer
+        tipsContainer.addView(cardView);
+    }
+
+
+
+
 
 
     // Updated method to retrieve the last value from SharedPreferences
-    private float getLastSensorValue(String sensorType) {
+    private float getLastSensorValue(int fieldNumber) {
         SharedPreferences preferences = requireActivity().getSharedPreferences("SensorData", Context.MODE_PRIVATE);
-        return preferences.getFloat(sensorType, 0.0f); // Change 0 to the default value you want
+
+        // Adjust the field number if it is 6
+        int adjustedFieldNumber = (fieldNumber == 3) ? 6 : fieldNumber;
+
+        switch (adjustedFieldNumber) {
+            case 1:
+                return preferences.getInt("field_1", 0);
+            case 2:
+                return preferences.getInt("field_2", 0);
+            case 3:
+                return preferences.getInt("field_3", 0);
+            case 4:
+                return preferences.getInt("field_4", 0);
+            case 5:
+                return preferences.getInt("field_5", 0);
+            case 6:
+                return preferences.getInt("field_6", 0);
+            default:
+                return 0;
+        }
     }
+
 
 
     private String generateTipsAlgorithm(float temperature, float humidity, float ldr, float motion, float fanStatus, float lampStatus) {
@@ -61,20 +115,17 @@ public class TipsFragment extends Fragment {
         String motionTip = generateMotionTip(motion);
         String fanLampStatusTip = generateFanLampStatusTip(fanStatus, lampStatus);
 
-        // Append the tips to the StringBuilder
-        tipsBuilder.append(temperatureTip);
-        tipsBuilder.append("\n");
-        tipsBuilder.append(humidityTip);
-        tipsBuilder.append("\n");
-        tipsBuilder.append(ldrTip);
-        tipsBuilder.append("\n");
-        tipsBuilder.append(motionTip);
-        tipsBuilder.append("\n");
+        // Append the tips to the StringBuilder with newline characters for spacing
+        tipsBuilder.append(temperatureTip).append("\n\n");
+        tipsBuilder.append(humidityTip).append("\n\n");
+        tipsBuilder.append(ldrTip).append("\n\n");
+        tipsBuilder.append(motionTip).append("\n\n");
         tipsBuilder.append(fanLampStatusTip);
 
         // Return the generated tips
         return tipsBuilder.toString();
     }
+
 
 
     private String generateTemperatureTip(float temperature) {

@@ -103,14 +103,15 @@ public class DashboardPageFragment extends Fragment {
 
         switch (adjustedFieldNumber) {
             case 1:
-                return preferences.getFloat("temperature", 0);
+                return preferences.getInt("field_1", 0);
             case 2:
-                return preferences.getFloat("humidity", 0);
+                return preferences.getInt("field_2", 0);
             case 6:
-                return preferences.getFloat("ldr", 0);
+                return preferences.getInt("field_6", 0);
             default:
                 return 0;
         }
     }
+
 
 }

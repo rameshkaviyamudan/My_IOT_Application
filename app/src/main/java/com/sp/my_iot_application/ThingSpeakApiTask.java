@@ -35,6 +35,7 @@ public class ThingSpeakApiTask extends AsyncTask<Void, Void, Void> {
     @Override
     protected Void doInBackground(Void... params) {
         try {
+
             // Construct the URL with API key
             String apiUrl = String.format("%s?api_key=%s", API_URL, API_KEY);
 
@@ -57,6 +58,7 @@ public class ThingSpeakApiTask extends AsyncTask<Void, Void, Void> {
 
             // Disconnect
             urlConnection.disconnect();
+
 
         } catch (Exception e) {
             Log.e(TAG, "Error sending data to ThingSpeak: " + e.getMessage());

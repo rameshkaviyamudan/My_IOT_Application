@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -38,21 +39,33 @@ import android.widget.Toast;
 // Use the appropriate import statements
 import pl.droidsonroids.gif.GifImageView;
 public class MainActivity extends AppCompatActivity implements ThingSpeakReadCallback {
+    // This method is called when ThingSpeakReadApiTask completes its execution
     @Override
     public void onThingSpeakDataReceived(int fieldNumber, int fieldValue) {
-        // Your implementation of handling the received data
+        // Store the data in SharedPreferences for each field
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putFloat(getFieldKey(fieldNumber), fieldValue);
+        editor.putInt(getFieldKey(fieldNumber), fieldValue);
         editor.apply();
 
-        // Display a Toast or perform any other UI-related operation
-        String message = String.format("Field %d value received: %d", fieldNumber, fieldValue);
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        // Display a Toast indicating successful storage
+        String message = String.format("Field %d value successfully stored: %d", fieldNumber, fieldValue);
+        showToast(message);
+
+        // Check if the received data is for Field 1 (temperature)
+        if (fieldNumber == 1) {
+            // Update the circle view or temperature TextView or GifImageView here
+            //updateTemperatureUI(fieldValue);
+        }
     }
+
+
     private LinearLayout pullDownMenu;
     private ImageView arrowIcon;
+    private TextView temptext;
 
     //private TextView field4TextView;
+    private ThingSpeakReadApiTask readApiTask; // Add this line
+    private String readApiUrl; // Declare readApiUrl
 
     private SharedPreferences sharedPreferences;
     private static final String SHARED_PREF_NAME = "SensorData";
@@ -60,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements ThingSpeakReadCal
     private BottomNavigationView bottomNavigationView;
     public static final String CHANNEL_ID = "MyIOTChannel";
     private static final int NOTIFICATION_REQUEST_CODE = 1001;
-
+    private String  channelId="2348974";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,14 +85,13 @@ public class MainActivity extends AppCompatActivity implements ThingSpeakReadCal
         // Assuming you have a GifImageView for fan and lamp icons
         GifImageView fanIcon = findViewById(R.id.fanIcon);
         GifImageView lampIcon = findViewById(R.id.lampIcon);
-
-        //field4TextView = findViewById(R.id.field4TextView); // Initialize TextView
+// Construct the URL for reading data from Field 1
         // Initialize SharedPreferences
         sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
-// Call the ThingSpeak API to read data for fields 1 to 6
-        for (int i = 1; i <= 6; i++) {
-            readThingSpeakData(i);
-        }
+
+        // Call the ThingSpeak API to read data for Field 1
+        readThingSpeakData();
+      //  }
 
 
 // Check if notification permission is granted
@@ -214,7 +226,6 @@ public class MainActivity extends AppCompatActivity implements ThingSpeakReadCal
         PullDownMenuFragment pullDownMenuFragment = (PullDownMenuFragment) fragmentManager.findFragmentByTag("pullDownMenu");
         FrameLayout fragmentContainer = findViewById(R.id.fragment_container);
         ImageView arrowIcon = findViewById(R.id.arrowIcon);
-
         if (pullDownMenuFragment == null) {
             // If menu is not visible, show it
             pullDownMenuFragment = new PullDownMenuFragment();
@@ -301,19 +312,7 @@ public class MainActivity extends AppCompatActivity implements ThingSpeakReadCal
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-    private void readThingSpeakData(int fieldNumber) {
-        // Replace with your ThingSpeak Read API key
-        // and channel ID
-        String apiKey = "HYIS4JRXOUDEEVC1";
-        String channelId = "2348974"; // Replace with your actual ThingSpeak channel ID
 
-        // Construct the URL for reading data from the specified field
-        String readApiUrl = String.format("https://api.thingspeak.com/channels/%s/fields/%d/last.json?api_key=%s", channelId, fieldNumber, apiKey);
-
-        // Call ThingSpeakReadApiTask
-        ThingSpeakReadApiTask readApiTask = new ThingSpeakReadApiTask(this, fieldNumber);
-        readApiTask.execute(readApiUrl);
-    }
     private void loadFragment(Fragment fragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.fragment_container2, fragment);
@@ -322,10 +321,30 @@ public class MainActivity extends AppCompatActivity implements ThingSpeakReadCal
     }
 
     // This method is called when ThingSpeakReadApiTask completes its execution
+    // Method to read data from ThingSpeak for a specific field
+    private void readThingSpeakData() {
+        // Replace with your ThingSpeak Read API key and channel ID
+        String apiKey = "HYIS4JRXOUDEEVC1";
+        String channelId = "2348974"; // Replace with your actual ThingSpeak channel ID
+
+        for (int i = 1; i <= 6; i++) {
+            // Construct the URL for reading data from the specified field
+            String readApiUrl = String.format("https://api.thingspeak.com/channels/%s/fields/%d/last.json?api_key=%s", channelId, i, apiKey);
+
+            // Call ThingSpeakReadApiTask for each field
+            ThingSpeakReadApiTask readApiTask = new ThingSpeakReadApiTask(i, this);
+            readApiTask.execute(readApiUrl);
+        }
+    }
 
     private String getFieldKey(int fieldNumber) {
         // Generate a key for storing the field value in SharedPreferences
         return "field_" + fieldNumber;
     }
+    // Helper method to display a Toast
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
 }
 

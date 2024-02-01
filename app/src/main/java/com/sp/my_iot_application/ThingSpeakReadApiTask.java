@@ -1,11 +1,7 @@
 package com.sp.my_iot_application;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
-
-import androidx.fragment.app.FragmentActivity;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,19 +11,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-// Define an interface for the callback
 
 public class ThingSpeakReadApiTask extends AsyncTask<String, Void, Integer> {
 
     private static final String TAG = "ThingSpeakReadApiTask";
-    private FragmentActivity activity;
     private ThingSpeakReadCallback callback;
-
     private int fieldNumber;
 
-    public ThingSpeakReadApiTask(FragmentActivity activity, int fieldNumber) {
-        this.activity = activity;
+    public ThingSpeakReadApiTask(int fieldNumber, ThingSpeakReadCallback callback) {
         this.fieldNumber = fieldNumber;
+        this.callback = callback;
     }
 
     @Override
@@ -63,7 +56,8 @@ public class ThingSpeakReadApiTask extends AsyncTask<String, Void, Integer> {
     @Override
     protected void onPostExecute(Integer fieldValue) {
         super.onPostExecute(fieldValue);
-// Notify the callback with the result
+
+        // Notify the callback with the result
         if (callback != null) {
             callback.onThingSpeakDataReceived(fieldNumber, fieldValue);
         }
