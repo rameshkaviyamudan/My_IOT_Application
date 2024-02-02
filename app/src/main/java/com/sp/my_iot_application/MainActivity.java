@@ -34,6 +34,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 // Use the appropriate import statements
@@ -52,10 +53,43 @@ public class MainActivity extends AppCompatActivity implements ThingSpeakReadCal
         showToast(message);
 
         // Check if the received data is for Field 1 (temperature)
+        // Check if the received data is for Field 1 (temperature)
         if (fieldNumber == 1) {
-            // Update the circle view or temperature TextView or GifImageView here
-            //updateTemperatureUI(fieldValue);
+            CircularColorView circularColorView = findViewById(R.id.circularColorView);
+            circularColorView.setTemperature(fieldValue);
+            updateTemperatureUI(fieldValue);
         }
+
+        if (fieldNumber == 4) {
+            Button fanButton = findViewById(R.id.fanButton);
+            boolean isFanOn = fieldValue == 1;
+            fanButton.setActivated(isFanOn);
+
+            int imageResource = isFanOn ? R.drawable.ic_button_on : R.drawable.ic_button_off;
+            fanButton.setBackgroundResource(imageResource);
+
+            updateFanButtonUI(isFanOn);
+
+            // Make the API call immediately when the state changes
+            int fanFieldNumber = 4;
+            int fanFieldValue = isFanOn ? 1 : 0;
+            makeApiCall(fanFieldNumber, fanFieldValue);
+        }
+
+        if (fieldNumber == 5) {
+            Button lampButton = findViewById(R.id.lampButton);
+            boolean isLampOn = fieldValue == 1;
+            lampButton.setActivated(isLampOn);
+
+            int imageResource = isLampOn ? R.drawable.ic_button_on : R.drawable.ic_button_off;
+            lampButton.setBackgroundResource(imageResource);
+
+            updateLampButtonUI(isLampOn);
+        }
+
+
+
+
     }
 
 
@@ -63,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements ThingSpeakReadCal
     private ImageView arrowIcon;
     private TextView temptext;
 
-    //private TextView field4TextView;
+    private TextView temperatureTextView;
     private ThingSpeakReadApiTask readApiTask; // Add this line
     private String readApiUrl; // Declare readApiUrl
 
@@ -106,27 +140,15 @@ public class MainActivity extends AppCompatActivity implements ThingSpeakReadCal
             @Override
             public void onClick(View v) {
                 // Toggle the state
-                boolean isChecked = !fanButton.isSelected();
-                fanButton.setSelected(isChecked);
+                boolean isChecked = !fanButton.isActivated();
+                fanButton.setActivated(isChecked);
 
                 // Change the background resource based on the toggle state
                 int imageResource = isChecked ? R.drawable.ic_button_on : R.drawable.ic_button_off;
                 fanButton.setBackgroundResource(imageResource);
 
-                if (isChecked) {
-                    int iconResource = R.drawable.ic_fan_on_anim;
-                    Glide.with(MainActivity.this)
-                            .asGif()
-                            .load(iconResource)
-                            .into(fanIcon);
-
-                } if(!isChecked) {
-                    int iconResource = R.drawable.ic_fan_off;
-                    Glide.with(MainActivity.this)
-                            .asGif()
-                            .load(iconResource)
-                            .into(fanIcon);
-                }
+                // Update the fan button UI
+                updateFanButtonUI(isChecked);
 
                 // Make the API call immediately when the state changes
                 int fieldNumber = 4;
@@ -139,26 +161,15 @@ public class MainActivity extends AppCompatActivity implements ThingSpeakReadCal
             @Override
             public void onClick(View v) {
                 // Toggle the state
-                boolean isChecked = !lampButton.isSelected();
-                lampButton.setSelected(isChecked);
+                boolean isChecked = !lampButton.isActivated();
+                lampButton.setActivated(isChecked);
 
                 // Change the background resource based on the toggle state
                 int imageResource = isChecked ? R.drawable.ic_button_on : R.drawable.ic_button_off;
                 lampButton.setBackgroundResource(imageResource);
 
-                if (isChecked) {
-                    int iconResource = R.drawable.ic_lamp_on_anim;
-                    Glide.with(MainActivity.this)
-                            .asGif()
-                            .load(iconResource)
-                            .into(lampIcon);
-                } else {
-                    int iconResource = R.drawable.ic_lamp_off;
-                    Glide.with(MainActivity.this)
-                            .asGif()
-                            .load(iconResource)
-                            .into(lampIcon);
-                }
+                // Update the lamp button UI
+                updateLampButtonUI(isChecked);
 
                 // Make the API call immediately when the state changes
                 int fieldNumber = 5;
@@ -166,6 +177,7 @@ public class MainActivity extends AppCompatActivity implements ThingSpeakReadCal
                 makeApiCall(fieldNumber, fieldValue);
             }
         });
+
 
 
         // Set onClickListener for the arrow icon
@@ -344,6 +356,45 @@ public class MainActivity extends AppCompatActivity implements ThingSpeakReadCal
     // Helper method to display a Toast
     private void showToast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+    // Method to update the temperature TextView
+    private void updateTemperatureUI(int temperature) {
+        // Update the temperature TextView inside the circle
+        TextView temperatureTextView = findViewById(R.id.temperatureTextView);
+        temperatureTextView.setText(String.format("%d°C", temperature));
+    }
+
+
+    private int getBackgroundColorForTemperature(int temperature) {
+        // Define temperature ranges
+        int coolTemp = 20;
+        int moderateTemp = 30;
+        int hotTemp = 40;
+
+        if (temperature <= coolTemp) {
+            return R.color.coolColor; // Cool Blue
+        } else if (temperature <= moderateTemp) {
+            return R.color.moderateColor; // Light Blue
+        } else if (temperature <= hotTemp) {
+            return R.color.hotColor; // Orange
+        } else {
+            return R.color.extremeHotColor; // Red
+        }
+    }
+    private void updateFanButtonUI(boolean isFanOn) {
+        int imageResource = isFanOn ? R.drawable.ic_fan_on_anim : R.drawable.ic_fan_off;
+        Glide.with(MainActivity.this)
+                .asGif()
+                .load(imageResource)
+                .into((GifImageView) findViewById(R.id.fanIcon));
+    }
+
+    private void updateLampButtonUI(boolean isLampOn) {
+        int imageResource = isLampOn ? R.drawable.ic_lamp_on_anim : R.drawable.ic_lamp_off;
+        Glide.with(MainActivity.this)
+                .asGif()
+                .load(imageResource)
+                .into((GifImageView) findViewById(R.id.lampIcon));
     }
 
 }
