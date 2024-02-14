@@ -47,7 +47,7 @@ This project aims to create an IoT-based home automation system controlled via a
 ## Videos
 
 ### Entire Uno and App Working
-[![Entire Uno and App Working](link_to_entire_video_thumbnail)](https://youtu.be/XNqMgMuKFB0)
+[![Entire Uno and App Working](https://share.icloud.com/photos/05diT_5I6NPFmlzRvBpnCCLZQ)](https://youtu.be/XNqMgMuKFB0)
 
 ### App Screen Capture
-[![App Screen Capture](link_to_app_video_thumbnail)](https://youtu.be/Ilp3xv7_e3w)
+[![App Screen Capture](https://youtu.be/Ilp3xv7_e3w)](https://youtu.be/Ilp3xv7_e3w)
