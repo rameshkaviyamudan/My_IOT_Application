@@ -51,11 +51,3 @@ This project aims to create an IoT-based home automation system controlled via a
 
 ### App Screen Capture
 [![App Screen Capture](link_to_app_video_thumbnail)](link_to_app_video)
-
-## Credits
-
-- Developed by [Your Name]
-
-## License
-
-This project is licensed under the [License Name] License - see the LICENSE.md file for details.
